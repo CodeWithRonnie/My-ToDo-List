@@ -29,11 +29,11 @@ const loasTasks = () => {
         res.json(loadTasks()));
 
     //adding of task
-    app.post("/tasks", (req, res) => {
-        const tasks = loadTasks();
-        tasks.active.push(req.body.task);
-        saveTasks(tasks);
-        res.json(tasks);
+    app.post("/task", (req, res) => {
+        const tasks = req.body;
+        tasks.id = tasks.length + 1;
+        tasks.push(tasks);
+        res.json(201).json(tasks)
     });
 
     //for tasks to be completed

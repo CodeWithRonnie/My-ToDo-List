@@ -4,6 +4,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeTaskContainer = document.getElementById("tasks-active");
     const completedTaskContainer = document.getElementById("completedTasks");
 
+
+
+    // Select the button and the container where tasks will be displayed
+const loadTasksButton = document.getElementById('add-task-button');
+const tasksContainer = document.getElementById('task-container');
+
+// Add an event listener to the button to trigger the fetch request
+loadTasksButton.addEventListener('click', () => {
+  // Fetch data from the backend API (assuming your server is running on localhost:3000)
+  fetch('http://localhost:3000')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(tasks => {
+      // Once we have the data, we can display it on the page
+      tasksContainer.innerHTML = ''; // Clear any existing tasks
+      tasks.forEach(task => {
+        const taskElement = document.createElement('div');
+        taskElement.textContent = task.task;
+        tasksContainer.appendChild(taskElement);
+      });
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+});
+
     //loading tasks
     const loadTasks = async () => {
         const response = await fetch("/tasks");
@@ -33,10 +63,25 @@ document.addEventListener("DOMContentLoaded", () => {
     addTaskButton.addEventListener("click", async () => {
         const task = taskInput.value.trim();
         if (task) {
-            const response = await fetch("/task", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({task}), });
-            renderTasks(await response.json());
-            taskInput.value
-        }
+            const response = await fetch("https://localhost:3000/task",
+             {method: "POST",
+                 headers: {"Content-Type": "application/json"}, 
+                 body: JSON.stringify({task}), })
+                 .then(response => {
+                    if (!response.ok){
+                        throw new Error("Network response was not ok")
+                    }
+                    return response.json();
+                 })
+                 .then(data => {
+                    console.log("Task added,");
+                 })
+                 .catch(error => {
+                    console.error("There was a problem with fetch operation", error)
+                 });
+
+                }
+       
     })
 
     //task marked as completed
