@@ -96,3 +96,178 @@ loadTasksButton.addEventListener('click', () => {
       
     
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const taskInput = document.querySelector("#taskInput");
+  const taskDateInput = document.querySelector("#taskDateInput");
+  const addTaskButton = document.getElementById("add-task-button");
+  const activeTaskContainer = document.getElementById("tasks-active");
+  const completedTaskContainer = document.getElementById("completedTasks");
+  const deletedTaskContainer = document.getElementById("deletedTasks");
+  const incompleteTaskContainer = document.getElementById("incompleteTasks"); 
+
+  let activeTasks = [];
+  let completedTasks = [];
+  let deletedTasks = [];
+  let incompleteTasks = []; 
+
+  const loadTasks = () => {
+      renderTasks(activeTasks, activeTaskContainer, "Added on", "To be completed by", true);
+      renderTasks(completedTasks, completedTaskContainer, "Completed on", null, false);
+      renderTasks(deletedTasks, deletedTaskContainer, "Deleted on", null, false); 
+      renderTasks(incompleteTasks, incompleteTaskContainer, "Incomplete since", "Due date", false); 
+  };
+
+  const renderTasks = (tasks, container, timestampLabel, completionLabel, isActive = false) => {
+      container.innerHTML = "";
+      tasks.forEach((task, index) => {
+          const li = document.createElement("li");
+
+          const taskName = document.createElement("div");
+          taskName.textContent = task.name;
+
+          if (task.state === "deleted") {
+              taskName.style.textDecoration = "line-through";
+              taskName.style.color = "#888";
+              li.addEventListener("click", () => handleDeletedTaskClick(index));
+          }
+
+          const taskTimestamp = document.createElement("div");
+          taskTimestamp.textContent = `${timestampLabel}: ${task.timestamp}`;
+          taskTimestamp.style.fontSize = "0.8rem";
+          taskTimestamp.style.color = "#ddd";
+
+          li.appendChild(taskName);
+          li.appendChild(taskTimestamp);
+
+          if (completionLabel) {
+              const taskCompletionDate = document.createElement("div");
+              taskCompletionDate.textContent = `${completionLabel}: ${task.completionDate}`;
+              taskCompletionDate.style.fontSize = "0.9rem";
+              taskCompletionDate.style.color = "#f0f0f0";
+              li.appendChild(taskCompletionDate);
+          }
+
+          if (isActive && task.state === "active") {
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.checked = false; 
+              checkbox.addEventListener("change", () => markAsCompleted(task, index, checkbox));
+              li.prepend(checkbox);
+          }
+
+          if (!isActive && task.state === "incomplete") {
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.checked = false; 
+              li.prepend(checkbox);
+          }
+
+          if (isActive && task.state === "active") {
+              const calendarButton = document.createElement("button");
+              calendarButton.textContent = "Add to Calendar";
+              calendarButton.addEventListener("click", (e) => {
+                  e.stopPropagation();
+                  addToCalendar(task);
+              });
+              li.appendChild(calendarButton);
+          }
+
+          if (task.state === "completed") {
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.checked = true;
+              li.prepend(checkbox);
+          }
+
+          if (task.state === "completed") {
+              const deleteButton = document.createElement("button");
+              deleteButton.textContent = "Delete";
+              deleteButton.classList.add("delete-button");
+              deleteButton.addEventListener("click", (e) => {
+                  e.stopPropagation();
+                  deleteTask(task, index);
+              });
+              li.appendChild(deleteButton);
+          }
+
+          container.appendChild(li);
+      });
+  };
+
+  const markAsCompleted = (task, index, checkbox) => {
+      if (checkbox.checked) {
+          task.state = "completed";
+          completedTasks.push(task);
+          activeTasks.splice(index, 1); 
+          loadTasks();
+      }
+  };
+
+  const checkOverdueTasks = () => {
+      const now = new Date();
+      activeTasks.forEach((task, index) => {
+          const dueDate = new Date(task.completionDate);
+          if (dueDate < now) {
+              task.state = "incomplete";
+              incompleteTasks.push(task);
+              activeTasks.splice(index, 1);
+          }
+      });
+      loadTasks();
+  };
+
+  const addToCalendar = (task) => {
+      const taskDate = new Date(task.completionDate);
+      const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.name)}&dates=${taskDate.toISOString().replace(/-|:|\.\d+/g, "")}/${taskDate.toISOString().replace(/-|:|\.\d+/g, "")}&details=${encodeURIComponent(task.notes)}&location=&sf=true&output=xml`;
+      window.open(calendarUrl, "_blank");
+  };
+
+  // Add new task
+  addTaskButton.addEventListener("click", () => {
+      const taskName = taskInput.value.trim();
+      const completionDate = taskDateInput.value;
+
+      if (taskName && completionDate) {
+          const newTask = {
+              name: taskName,
+              timestamp: new Date().toLocaleString(),
+              completionDate: completionDate,
+              state: "active",
+              notes: ""
+          };
+
+          activeTasks.push(newTask);
+          taskInput.value = "";
+          taskDateInput.value = "";
+          loadTasks();
+      } else {
+          alert("Please fill in both the task name and completion date.");
+      }
+  });
+
+  // Delete task permanently
+  const deleteTask = (task, index) => {
+      const fromActive = activeTasks.findIndex(t => t.name === task.name);
+      if (fromActive !== -1) {
+          activeTasks.splice(fromActive, 1);
+      }
+
+      const fromCompleted = completedTasks.findIndex(t => t.name === task.name);
+      if (fromCompleted !== -1) {
+          completedTasks.splice(fromCompleted, 1);
+      }
+
+      const deletedTask = { ...task, state: "deleted", timestamp: new Date().toLocaleString() };
+      deletedTasks.push(deletedTask);
+      loadTasks();
+  };
+
+  const handleDeletedTaskClick = (index) => {
+      const deletedTask = deletedTasks[index];
+      alert(`Task "${deletedTask.name}" has been deleted.`);
+  };
+
+  loadTasks();
+  checkOverdueTasks();
+});

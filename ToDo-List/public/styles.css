@@ -1,7 +1,9 @@
-body{
+
+
+body {
     font-family: Arial, Helvetica, sans-serif;
     text-align: center;
-    background: linear-gradient(120deg, #ff6ec4, #7873f5);
+    background: linear-gradient(120deg, #ff6ec4, #7873f5); /* Keep the original gradient */
     color: white;
     padding: 0;
     margin: 0;
@@ -11,8 +13,8 @@ body{
     height: 100vh;
 }
 
-.container{
-    width: 80%;
+.container {
+    width: 90%; 
     max-width: 600px;
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
@@ -20,57 +22,95 @@ body{
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
 }
 
-.input-container{
+
+.input-container {
     display: flex;
     gap: 10px;
+    margin-bottom: 20px;
 }
 
-input{
+input[type="text"], input[type="date"] {
     flex: 1;
     padding: 10px;
     border: none;
     border-radius: 5px;
+    font-size: 1rem;
 }
 
-button{
-    background: linear-gradient(90deg, #ff9a9e, #fad0c4);
-    border: none;
-    padding: 10px, 20px;
+
+button {
+    background: linear-gradient(90deg, #91448d, #be64a8); 
+    color: white;
+    padding: 10px 20px;
     cursor: pointer;
+    border: none;
     border-radius: 5px;
 }
 
-.task-container{
+
+.task-container {
     display: flex;
-    height: 50%;
-    justify-content: space-between;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
 }
 
-.task-box{
-    width: 45%;
-    height: 50%;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.2);
+
+.task-box {
+    width: 97%;
+    padding: 10px 10px;
+    background: rgba(70, 64, 64, 0.3);
     border-radius: 10px;
 }
 
-ul{
+ul {
     list-style: none;
     padding: 0;
 }
 
-li{
-    background: linear-gradient(90deg, #a18cd1, #fbc2eb);
+
+li {
+    background: rgb(209, 112, 201); 
     padding: 10px;
     margin: 5px 0;
     border-radius: 5px;
     cursor: pointer;
-    transition: transform 0.2ms;
-
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
-li:hover{
+li:hover {
     transform: scale(1.05);
 }
+
+li div {
+    margin-bottom: 5px;
+}
+
+.delete-button {
+    background-color: rgb(58, 104, 231);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+@media (max-width: 1200px) {
+    .container {
+        width: 90%;
+        padding: 15px;
+    }
+
+    input[type="text"], input[type="date"], button {
+        font-size: 1rem;
+    }
+
+    .task-box {
+        width: 100%;
+    }
+}
+
 
