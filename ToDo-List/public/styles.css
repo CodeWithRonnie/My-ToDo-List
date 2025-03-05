@@ -1,5 +1,3 @@
-
-
 body {
     font-family: Arial, Helvetica, sans-serif;
     text-align: center;
@@ -22,7 +20,6 @@ body {
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
 }
 
-
 .input-container {
     display: flex;
     gap: 10px;
@@ -37,7 +34,6 @@ input[type="text"], input[type="date"] {
     font-size: 1rem;
 }
 
-
 button {
     background: linear-gradient(90deg, #91448d, #be64a8); 
     color: white;
@@ -47,14 +43,12 @@ button {
     border-radius: 5px;
 }
 
-
 .task-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
     width: 100%;
 }
-
 
 .task-box {
     width: 97%;
@@ -67,7 +61,6 @@ ul {
     list-style: none;
     padding: 0;
 }
-
 
 li {
     background: rgb(209, 112, 201); 
@@ -97,7 +90,22 @@ li div {
     cursor: pointer;
 }
 
+/* Added strikethrough for deleted tasks */
+li.deleted {
+    text-decoration: line-through;
+    color: #888;
+}
 
+li.deleted .delete-button {
+    display: none; /* Hide the delete button for deleted tasks */
+}
+
+/* Hover effect when hovering over deleted tasks */
+li.deleted:hover {
+    background-color: rgb(128, 128, 128);
+}
+
+/* Mobile responsiveness */
 @media (max-width: 1200px) {
     .container {
         width: 90%;
@@ -112,5 +120,3 @@ li div {
         width: 100%;
     }
 }
-
-

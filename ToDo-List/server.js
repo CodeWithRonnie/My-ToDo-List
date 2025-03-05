@@ -1,56 +1,73 @@
-// Import necessary modules
 const express = require('express');
-const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
+const mongoose = require('mongoose');
+const cors = require('cors'); // CORS for handling cross-origin requests
 
-// Initialize Express app
 const app = express();
-const port = 3000;
 
-// Middleware to parse JSON data from requests
+// Enable CORS
+app.use(cors());
+
+// Middleware to parse incoming JSON data
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (HTML, CSS, JS) from the "public" folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/todoApp')
+    .then(() => console.log('MongoDB connected successfully'))
+    .catch((err) => console.error('Could not connect to MongoDB...', err));
 
-// API route for getting tasks (from your database)
-app.get('/tasks', (req, res) => {
-  const db = new sqlite3.Database('./todos.db'); // Connect to your database
-  const query = 'SELECT * FROM tasks'; // Modify this according to your DB schema
-
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      throw err;
-    }
-    res.json(rows); // Send tasks as JSON response
-  });
-
-  db.close(); // Close the database connection
+// Define Task schema and model
+const taskSchema = new mongoose.Schema({
+    name: String,
+    timestamp: String,
+    completionDate: String,
+    state: String,
+    notes: String,
 });
 
-// API route for adding a task
-app.post('/task', (req, res) => {
-  const { task, completionDate } = req.body;
-  const db = new sqlite3.Database('./todos.db'); // Connect to the database
+const Task = mongoose.model('Task', taskSchema);
 
-  const query = 'INSERT INTO tasks (task, completionDate) VALUES (?, ?)';
-  db.run(query, [task, completionDate], function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+// API route to get all tasks
+app.get('/tasks', async (req, res) => {
+    try {
+        const tasks = await Task.find(); // Fetch all tasks from DB
+        res.json(tasks); // Return tasks as JSON
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
-    res.status(201).json({ id: this.lastID, task, completionDate });
-  });
-
-  db.close(); // Close the database connection
 });
 
-// Handle the root route, serving the main index.html page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// API route to add a new task
+app.post('/tasks', async (req, res) => {
+    try {
+        const newTask = new Task(req.body); // Create a new task object from the request body
+        await newTask.save(); // Save the task to the database
+        res.json(newTask); // Return the new task as JSON
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// API route to update task status to completed
+app.put('/tasks/:id', async (req, res) => {
+    try {
+        const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(task); // Return the updated task
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// API route to delete a task
+app.delete('/tasks/:id', async (req, res) => {
+    try {
+        const task = await Task.findByIdAndDelete(req.params.id);
+        res.json(task); // Return the deleted task
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
 });
