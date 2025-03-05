@@ -1,53 +1,56 @@
-const express = require("express");
-const fs = require("fs");
-const cors = require("cors");
-const bodyParser = require("body-parser");
+// Import necessary modules
+const express = require('express');
+const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
+
+// Initialize Express app
 const app = express();
-const   PORT = 3000;
-const DATA_FILE = "tasks.json";
+const port = 3000;
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static("public"));
+// Middleware to parse JSON data from requests
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Serve static files (HTML, CSS, JS) from the "public" folder
+app.use(express.static(path.join(__dirname, 'public')));
 
-//get tasks
-const loasTasks = () => {
-    if (!fs .existsSync(DATA_FILE)) return{
-        active: [], completed: []};
-        return JSON.parse(fs.readFileSync(DATA_FILE));
-    
-    };
+// API route for getting tasks (from your database)
+app.get('/tasks', (req, res) => {
+  const db = new sqlite3.Database('./todos.db'); // Connect to your database
+  const query = 'SELECT * FROM tasks'; // Modify this according to your DB schema
 
-    //saving tasks
-    const saveTasks = (tasks) => {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(tasks));
-    };
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      throw err;
+    }
+    res.json(rows); // Send tasks as JSON response
+  });
 
-    //get all tasks
-    app.get("/tasks", (req, res) => 
-        res.json(loadTasks()));
+  db.close(); // Close the database connection
+});
 
-    //adding of task
-    app.post("/task", (req, res) => {
-        const tasks = req.body;
-        tasks.id = tasks.length + 1;
-        tasks.push(tasks);
-        res.json(201).json(tasks)
-    });
+// API route for adding a task
+app.post('/task', (req, res) => {
+  const { task, completionDate } = req.body;
+  const db = new sqlite3.Database('./todos.db'); // Connect to the database
 
-    //for tasks to be completed
-    app.put("/tasks/complete", (req, res) => {
-        const tasks = loadTasks();
-        const index = tasks.active.indexOf(req.body.task);
-        if (index > -1) {
-            tasks.active.splice(index, 1);
-            tasks.completed.push(req.body.task);
-            saveTasks(tasks);
-        }
-        res.json(tasks);
-    });
+  const query = 'INSERT INTO tasks (task, completionDate) VALUES (?, ?)';
+  db.run(query, [task, completionDate], function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.status(201).json({ id: this.lastID, task, completionDate });
+  });
 
-    //code to start the server
-    app.listen(PORT, () => 
-        console.log(`Server is running on http://localhost:${PORT}`));
+  db.close(); // Close the database connection
+});
+
+// Handle the root route, serving the main index.html page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
+});
